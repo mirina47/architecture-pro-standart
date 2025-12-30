@@ -63,9 +63,11 @@ Rel(call_center_back, deposit_service, "Передаёт заявки на де�
 
 Rel(front_office_manager, deposit_service, "Общается с клиентом, создает и передает заявку на депозит")
 Rel(front_office_manager, abs, "Общается с клиентом, создает и передает заявку на кредит")
-Rel(back_office_deposit, deposit_service, "Обрабатывает заявки на депозиты", "REST API")
-Rel(back_office_credit, abs, "Обрабатывает заявки на кредиты", "REST API")
+Rel(back_office_deposit, deposit_service, "Обрабатывает заявки на депозиты")
+Rel(back_office_credit, abs, "Обрабатывает заявки на кредиты")
+
 Rel(abs, abs_db, "Извлекает и записывает данные", "SQL")
+Rel(deposit_service, abs, "Обмен данными", "REST API")
 
 Rel(internet_bank_front, internet_bank_back, "Обработка заявки")
 Rel(internet_bank_back, deposit_service, "Передаёт заявки", "REST API")

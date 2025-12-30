@@ -1,7 +1,7 @@
 @startuml Standart_C4_Container
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title Диаграмма контейнеров банковской системы «Стандарт» (MVP передачи ставок в кол-центр)
+title Диаграмма контейнеров банковской системы «Стандарт» (MVP заявки на кредит онлайн)
 
 Person(client, "Клиент", "Клиент банка")
 Person(call_center_operator, "Оператор кол-центра", "Сотрудник кол-центра банка")
@@ -37,6 +37,7 @@ System_Boundary(bank_system, "Банковская система") {
 
     ' --- Микросервисы ---
     Container(deposit_service, "Deposit Service", "Java Spring Boot", "Обрабатывает заявки на депозиты")
+    Container(credit_service, "Credit Service", "Java Spring Boot", "Обрабатывает заявки на кредиты")
     Container(sms_service, "SMS Service", "Java Spring Boot", "Рассылка СМС")
     Container(bet_service, "Bet Service", "Java Spring Boot", "Обновление и рассылка ставок")
 
@@ -75,28 +76,34 @@ Rel(bet_service, abs_db, "Извлекает и записывает данны�
 
 
 Rel(front_office_manager, deposit_service, "Общается с клиентом, создает и передает заявку на депозит")
-Rel(front_office_manager, abs, "Общается с клиентом, создает и передает заявку на кредит")
+Rel(front_office_manager, credit_service, "Общается с клиентом, создает и передает заявку на кредит")
 Rel(back_office_deposit, deposit_service, "Обрабатывает заявки на депозиты")
-Rel(back_office_credit, abs, "Обрабатывает заявки на кредиты")
+Rel(back_office_credit, credit_service, "Обрабатывает заявки на кредиты")
 
 Rel(abs, abs_db, "Извлекает и записывает данные", "SQL")
 Rel(deposit_service, abs, "Обмен данными", "REST API")
+Rel(credit_service, abs, "Обмен данными", "REST API")
 
 Rel(internet_bank_front, internet_bank_back, "Обработка заявки")
 Rel(internet_bank_back, deposit_service, "Передаёт заявки", "REST API")
+Rel(internet_bank_back, credit_service, "Передаёт заявки", "REST API")
 Rel(internet_bank_back, internet_bank_db, "Извлекает и записывает данные", "SQL")
 
 Rel(bank_site_front, bank_site_back, "Обработка заявки")
 Rel(bank_site_back, deposit_service, "Передаёт заявки", "REST API")
+Rel(bank_site_back, credit_service, "Передаёт заявки", "REST API")
 
 Rel(deposit_service, abs_db, "Извлекает и записывает данные", "SQL")
 Rel(deposit_service, sms_service, "Отправляет запрос на отправку СМС", "REST API")
+
+Rel(credit_service, abs_db, "Извлекает и записывает данные", "SQL")
+Rel(credit_service, sms_service, "Отправляет запрос на отправку СМС", "REST API")
 
 Rel(abs, sms_service, "Отправляет запрос на отправку СМС", "REST API")
 Rel(sms_service, sms_gateway, "Отправляет СМС-оповещение")
 Rel(sms_gateway, client, "Уведомления о статусе заявки", "SMS")
 
-Rel(abs, credit_pipeline, "Обрабатывает заявку на кредит")
+Rel(credit_service, credit_pipeline, "Обрабатывает заявку на кредит")
 Rel(credit_pipeline, credit_scoring, "Запрашивает скоринг кредита")
 Rel(credit_pipeline, credit_pipeline_db, "Извлекает и записывает данные", "SQL")
 
