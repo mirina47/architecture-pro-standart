@@ -1,0 +1,105 @@
+@startuml Standart_C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров банковской системы «Стандарт» (MVP передачи ставок в кол-центр)
+
+Person(client, "Клиент", "Клиент банка")
+Person(call_center_operator, "Оператор кол-центра", "Сотрудник кол-центра банка")
+Person(partner_call_center_operator, "Оператор партнерского кол-центра", "Сотрудник партнерского кол-центра")
+Person(front_office_manager, "Менеджер фронт-офиса", "Сотрудник отделения банка")
+Person(back_office_deposit, "Менеджер бэк-офиса депозитов", "Сотрудник, специализирующийся на депозитах")
+Person(back_office_credit, "Менеджер бэк-офиса кредитов", "Сотрудник, специализирующийся на кредитах")
+
+
+' === Интернет-банк ===
+System_Boundary(internet_bank, "Интернет-банк") {
+    Container(internet_bank_front, "Frontend", "ASP.NET MVC 4.5", "UI интернет-банка")
+    Container(internet_bank_back, "Backend", ".NET Framework 4.5", "Бизнес-логика интернет-банка")
+    ContainerDb(internet_bank_db, "DB интернет-банка", "MS SQL", "Данные интернет-банка")
+}
+
+' === Сайт банка ===
+System_Boundary(bank_site, "Сайт банка") {
+    Container(bank_site_front, "Frontend сайта", "React.js", "Форма заявки на депозит")
+    Container(bank_site_back, "Backend сайта", "PHP", "Обработка заявок")
+}
+
+' === Банковская система ===
+System_Boundary(bank_system, "Банковская система") {
+    ' --- Кол-центр ---
+    Container(call_center_front, "Web-интерфейс кол-центра", "React.js", "Рабочее место оператора")
+    Container(call_center_back, "Backend кол-центра", "Java Spring Boot", "CRM-логика")
+    ContainerDb(call_center_db, "DB кол-центра", "PostgreSQL", "Данные заявок")
+
+    ' --- АБС ---
+    Container(abs, "АБС", "Delphi + PL/SQL", "Учёт депозитов и договоров")
+    ContainerDb(abs_db, "DB АБС", "Oracle", "Финансовые данные")
+
+    ' --- Микросервисы ---
+    Container(deposit_service, "Deposit Service", "Java Spring Boot", "Обрабатывает заявки на депозиты")
+    Container(sms_service, "SMS Service", "Java Spring Boot", "Рассылка СМС")
+    Container(bet_service, "Bet Service", "Java Spring Boot", "Обновление и рассылка ставок")
+
+    ' --- Кредитные системы ---
+    Container(credit_pipeline, "Кредитный конвейер", "Camunda BPM", "Обработка кредитных заявок")
+    ContainerDb(credit_pipeline_db, "DB кредитного конвейера", "Oracle", "Данные процессов")
+
+    Container(credit_scoring, "Система кредитного скоринга", "Python + Flask", "Расчёт скоринга")
+    ContainerDb(credit_scoring_db, "DB кредитного скоринга", "PostgreSQL", "Модели и результаты")
+
+}
+
+System_Ext(credit_history_bureaus, "Бюро кредитных историй")
+System_Ext(sms_gateway, "СМС-шлюз", "Сервис отправки СМС-уведомлений")
+System_Ext(partner_call_center, "Партнерский кол-центр", "Работает во внешней информационной системе относительно банка")
+
+Rel(client, internet_bank_front, "Подаёт заявку на депозит")
+Rel(client, bank_site_front, "Подаёт заявку на депозит")
+Rel(client, call_center_operator, "Совершает звонок насчет депозита", "Телефонный звонок")
+Rel(client, partner_call_center_operator, "Совершает звонок  насчет депозита", "Телефонный звонок")
+Rel(client, front_office_manager, "Обращается в отделение банка с заявкой на депозит/кредит")
+
+Rel(call_center_operator, client, "Консультирует по условиям депозита", "Телефонный звонок")
+Rel(call_center_operator, call_center_front, "Оформляет заявку на депозит")
+Rel(call_center_front, call_center_back, "Передаёт заявки на депозит")
+Rel(call_center_back, call_center_db, "Извлекает и записывает данные", "SQL")
+Rel(call_center_back, deposit_service, "Передаёт заявки на депозит", "REST API")
+
+Rel(partner_call_center_operator, client, "Консультирует по условиям", "Телефонный звонок")
+Rel(partner_call_center_operator, partner_call_center, "Получает данные по ставкам")
+
+Rel(call_center_back, bet_service, "Получает данные по ставкам", "SFTP")
+Rel(partner_call_center, bet_service, "Получает данные по ставкам", "SMTP")
+Rel(back_office_credit, bet_service, "Подсчитывает ставки вручную, обновляет в системе")
+Rel(bet_service, abs_db, "Извлекает и записывает данные", "SQL")
+
+
+Rel(front_office_manager, deposit_service, "Общается с клиентом, создает и передает заявку на депозит")
+Rel(front_office_manager, abs, "Общается с клиентом, создает и передает заявку на кредит")
+Rel(back_office_deposit, deposit_service, "Обрабатывает заявки на депозиты", "REST API")
+Rel(back_office_credit, abs, "Обрабатывает заявки на кредиты", "REST API")
+Rel(abs, abs_db, "Извлекает и записывает данные", "SQL")
+
+Rel(internet_bank_front, internet_bank_back, "Обработка заявки")
+Rel(internet_bank_back, deposit_service, "Передаёт заявки", "REST API")
+Rel(internet_bank_back, internet_bank_db, "Извлекает и записывает данные", "SQL")
+
+Rel(bank_site_front, bank_site_back, "Обработка заявки")
+Rel(bank_site_back, deposit_service, "Передаёт заявки", "REST API")
+
+Rel(deposit_service, abs_db, "Извлекает и записывает данные", "SQL")
+Rel(deposit_service, sms_service, "Отправляет запрос на отправку СМС", "REST API")
+
+Rel(abs, sms_service, "Отправляет запрос на отправку СМС", "REST API")
+Rel(sms_service, sms_gateway, "Отправляет СМС-оповещение")
+Rel(sms_gateway, client, "Уведомления о статусе заявки", "SMS")
+
+Rel(abs, credit_pipeline, "Обрабатывает заявку на кредит")
+Rel(credit_pipeline, credit_scoring, "Запрашивает скоринг кредита")
+Rel(credit_pipeline, credit_pipeline_db, "Извлекает и записывает данные", "SQL")
+
+Rel(credit_scoring, credit_history_bureaus, "Запрашивает кредитную историю клиента", "REST API")
+Rel(credit_scoring, credit_scoring_db, "Извлекает и записывает данные", "SQL")
+
+
+@enduml

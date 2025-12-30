@@ -22,6 +22,7 @@ Rel(client, call_center_operator, "Совершает звонок", "Телеф
 Rel(client, front_office_manager, "Обращается в отделение банка")
 
 Rel(call_center_operator, client, "Консультирует по условиям", "Телефонный звонок")
+Rel(call_center_operator, bank_system, "Создает и передает заявку")
 
 Rel(front_office_manager, bank_system, "Общается с клиентом, создает и передает заявку")
 Rel(back_office_deposit, bank_system, "Обрабатывает заявки на депозиты")

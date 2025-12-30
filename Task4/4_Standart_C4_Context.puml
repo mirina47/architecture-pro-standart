@@ -1,0 +1,43 @@
+@startuml Standart_C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста банковской системы «Стандарт» (MVP передачи ставок в кол-центр)
+
+Person(client, "Клиент", "Клиент банка")
+Person(call_center_operator, "Оператор кол-центра", "Сотрудник кол-центра банка")
+Person(partner_call_center_operator, "Оператор партнерского кол-центра", "Сотрудник партнерского кол-центра")
+Person(front_office_manager, "Менеджер фронт-офиса", "Сотрудник отделения банка")
+Person(back_office_deposit, "Менеджер бэк-офиса депозитов", "Сотрудник, специализирующийся на депозитах")
+Person(back_office_credit, "Менеджер бэк-офиса кредитов", "Сотрудник, специализирующийся на кредитах")
+
+System(internet_bank, "Интернет-банк", "Клиент-серверная система")
+System(bank_site, "Сайт банка", "Публичный сайт")
+System(bank_system, "Банковская система", "Система банка «Стандарт», включает в себя АБС и другое ПО")
+
+System_Ext(credit_history_bureaus, "Бюро кредитных историй")
+System_Ext(sms_gateway, "СМС-шлюз", "Сервис отправки СМС-уведомлений")
+System_Ext(partner_call_center, "Партнерский кол-центр", "Работает во внешней информационной системе относительно банка")
+
+Rel(client, internet_bank, "Подаёт заявку на депозит/кредит")
+Rel(client, bank_site, "Подаёт заявку на депозит/кредит")
+Rel(client, call_center_operator, "Совершает звонок", "Телефонный звонок")
+Rel(client, partner_call_center_operator, "Совершает звонок", "Телефонный звонок")
+Rel(client, front_office_manager, "Обращается в отделение банка")
+
+Rel(call_center_operator, client, "Консультирует по условиям", "Телефонный звонок")
+Rel(call_center_operator, bank_system, "Создает и передает заявку")
+
+Rel(partner_call_center_operator, client, "Консультирует по условиям", "Телефонный звонок")
+Rel(partner_call_center_operator, partner_call_center, "Получает данные по ставкам")
+
+Rel(front_office_manager, bank_system, "Общается с клиентом, создает и передает заявку")
+Rel(back_office_deposit, bank_system, "Обрабатывает заявки на депозиты")
+Rel(back_office_credit, bank_system, "Обрабатывает заявки на кредиты")
+
+Rel(internet_bank, bank_system, "Передаёт заявки")
+Rel(bank_site, bank_system, "Передаёт заявки")
+Rel(bank_system, sms_gateway, "Инициирует отправку СМС")
+Rel(sms_gateway, client, "Уведомления о статусе заявки", "SMS")
+Rel(bank_system, credit_history_bureaus, "Запрашивает кредитную историю клиента", "REST API")
+
+@enduml
